@@ -1,0 +1,4 @@
+train: /Users/114514ma/object_detection_lab/public_data/cup/images/train
+val: /Users/114514ma/object_detection_lab/public_data/cup/images/val
+nc: 1
+names: ['cup']
