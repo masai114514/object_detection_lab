@@ -2,3 +2,12 @@ __pycache__/
 *.pyc
 runs/
 results/
+.DS_Store
+*.tar.gz
+public_data/
+*.pt
+*.onnx
+*.engine
+runs/
+!runs/detect/cup_model/results.png
+!runs/detect/cup_model/results.csv
