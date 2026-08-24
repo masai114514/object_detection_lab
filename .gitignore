@@ -11,3 +11,26 @@ public_data/
 runs/
 !runs/detect/cup_model/results.png
 !runs/detect/cup_model/results.csv
+
+# 忽略整个 runs 目录
+runs/
+
+# 但允许提交训练结果中的图表和指标文件
+!runs/detect/cup_model/results.png
+!runs/detect/cup_model/results.csv
+!runs/detect/cup_model/confusion_matrix.png
+!runs/detect/cup_model/PR_curve.png
+
+# Mac 系统文件
+.DS_Store
+
+# 压缩包
+*.tar.gz
+
+# 数据集
+public_data/
+
+# 模型权重
+*.pt
+*.onnx
+*.engine
