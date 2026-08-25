@@ -35,5 +35,19 @@ public_data/
 *.onnx
 *.engine
 
+# 但允许提交测试结果与错误案例（验收要求）
+!results/test_results.csv
+!results/error_cases/
+
+# 新版双类模型的训练图表（报告用）
+!runs/detect/combined_model_v3/results.csv
+!runs/detect/combined_model_v3/results.png
+!runs/detect/combined_model_v3/confusion_matrix.png
+!runs/detect/combined_model_v3/confusion_matrix_normalized.png
+!runs/detect/combined_model_v3/BoxPR_curve.png
+!runs/detect/combined_model_v3/BoxF1_curve.png
+!runs/detect/combined_model_v3/labels.jpg
+!runs/detect/combined_model_v3/val_batch0_pred.jpg
+
 # 云训练打包产物（按需重新生成）
 cloud_train.tar.gz

@@ -59,6 +59,15 @@ python3 scripts/build_combined_dataset.py \
     --val-split 0.15
 ```
 
+### 实验结果（本次训练）
+
+- 模型：yolov8s（150 epochs，cos_lr，AdamW auto），在 AutoDL RTX 5090 上训练 ~70 min（本地 MPS 约需 8h）
+- 验证集 mAP50：**0.975**（epoch 150 收敛，runs/detect/combined_model_v3/results.png）
+- 个人测试集（20 张，10 cup + 10 mouse）：
+  - **cup 10/10 = 100%**，**mouse 9/10 = 90%**，**总体 19/20 = 95%**（验收要求 ≥80%）
+- 典型错误案例（1 例）：`mouse_x_cup_a79a99a9...jpg` —— 竖拍顶部、目标部分出框，模型以
+  conf 0.499 误判为 cup。见 `results/error_cases/`，可补充该姿态的个人鼠标数据进一步优化。
+
 ### 2. 训练（Mac MPS 或 AutoDL 云 GPU）
 
 ```bash
