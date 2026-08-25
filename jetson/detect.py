@@ -9,13 +9,19 @@ Jetson 实时目标检测程序（cup + mouse）。
 - 记录错误案例图片到 results/error_cases/
 - 按 'q' 退出
 
+两种运行方式：
+- 有显示器（或 X11 转发）：默认弹窗预览，按 's'/'q' 交互
+- 无显示器（SSH 终端）：加 --no-show，自动周期存帧 + 打印 FPS，不弹窗
+
 在 Jetson 上运行：
-    python3 jetson/detect.py --model /home/jetson/models/combined_best.engine
+    python3 jetson/detect.py --model /home/jetson/models/combined_best.engine            # 有显示器
+    python3 jetson/detect.py --model ...engine --no-show --save-interval 3             # SSH 无显示
 """
 import argparse
 import csv
 import json
 import os
+import sys
 import time
 
 import cv2
@@ -29,6 +35,10 @@ def main():
     ap.add_argument('--conf', type=float, default=0.25)
     ap.add_argument('--imgsz', type=int, default=640)
     ap.add_argument('--out', default='results')
+    ap.add_argument('--no-show', action='store_true',
+                    help='无显示环境（SSH 无 DISPLAY）：自动存帧+打印 FPS，不弹窗、不做交互')
+    ap.add_argument('--save-interval', type=float, default=3.0,
+                    help='--no-show 时每隔多少秒存一张带框帧')
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -45,9 +55,16 @@ def main():
     writer = csv.writer(csv_handle)
     writer.writerow(['timestamp', 'true_class', 'pred_class', 'confidence', 'bbox'])
 
+    # 显示可用性：显式 --no-show，或在 Linux 下无 DISPLAY（Jetson SSH 场景）
+    show = (not args.no_show) and (os.name == 'nt' or sys.platform == 'darwin'
+                                   or bool(os.environ.get('DISPLAY')))
+    if not show:
+        print(f"[headless] 无显示环境，自动每 {args.save_interval:.0f}s 存帧到 {args.out}/，Ctrl-C 退出。")
+
     fps = 0.0
     last = time.time()
-    print(f"按 's' 保存+记录，'q' 退出。模型: {args.model}")
+    last_save = 0.0
+    print(f"{'按 s 保存+记录 / q 退出。' if show else ''}模型: {args.model}")
 
     while True:
         ret, frame = cap.read()
@@ -75,30 +92,40 @@ def main():
         now = time.time()
         fps = 0.9 * fps + 0.1 * (1.0 / (now - last + 1e-6))
         last = now
-        cv2.putText(frame, f'FPS: {fps:.1f}', (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
-        cv2.imshow('cup+mouse detection', frame)
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord('s'):
-            ts = time.strftime('%Y%m%d_%H%M%S')
-            img_path = os.path.join(args.out, f'{ts}.jpg')
-            cv2.imwrite(img_path, frame)
-            true_cls = input('真值类别 (0=cup, 1=mouse): ').strip()
-            true_name = 'cup' if true_cls == '0' else 'mouse'
-            pred = detections[0] if detections else {'class': 'none', 'confidence': 0, 'bbox': []}
-            writer.writerow([ts, true_name, pred['class'], pred['confidence'],
-                             json.dumps(pred['bbox'])])
-            csv_handle.flush()
-            if true_name != pred['class']:
-                cv2.imwrite(os.path.join(err_dir, f'{ts}_{true_name}_{pred["class"]}.jpg'), frame)
-                print(f'错误案例已保存: {ts}')
-        elif key == ord('q'):
-            break
+        if show:
+            cv2.putText(frame, f'FPS: {fps:.1f}', (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+            cv2.imshow('cup+mouse detection', frame)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('s'):
+                ts = time.strftime('%Y%m%d_%H%M%S')
+                img_path = os.path.join(args.out, f'{ts}.jpg')
+                cv2.imwrite(img_path, frame)
+                true_cls = input('真值类别 (0=cup, 1=mouse): ').strip()
+                true_name = 'cup' if true_cls == '0' else 'mouse'
+                pred = detections[0] if detections else {'class': 'none', 'confidence': 0, 'bbox': []}
+                writer.writerow([ts, true_name, pred['class'], pred['confidence'],
+                                 json.dumps(pred['bbox'])])
+                csv_handle.flush()
+                if true_name != pred['class']:
+                    cv2.imwrite(os.path.join(err_dir, f'{ts}_{true_name}_{pred["class"]}.jpg'), frame)
+                    print(f'错误案例已保存: {ts}')
+            elif key == ord('q'):
+                break
+        else:
+            # headless：周期打印 FPS 摘要 + 存带框帧
+            if now - last_save >= args.save_interval:
+                last_save = now
+                ts = time.strftime('%Y%m%d_%H%M%S')
+                cv2.imwrite(os.path.join(args.out, f'auto_{ts}.jpg'), frame)
+                desc = '; '.join(f"{d['class']} {d['confidence']}" for d in detections) or '无检测'
+                print(f"[{ts}] FPS {fps:.1f} | {desc}")
 
     cap.release()
     csv_handle.close()
-    cv2.destroyAllWindows()
+    if show:
+        cv2.destroyAllWindows()
     print(f"结果已保存到 {args.out}/")
 
 
