@@ -49,7 +49,8 @@ python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"
 #   pip3 install torch torchvision --index-url https://download.pytorch.org/whl/jp... （见官方 jetpack 说明）
 
 # 装 ultralytics（不会覆盖已装的 torch，放心）
-pip3 install -U ultralytics
+# 版本钉在与训练环境一致（8.4.127），避免版本升级改变 engine 导出行为
+pip3 install -U ultralytics==8.4.127
 # 国内网络慢可加镜像：-i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
