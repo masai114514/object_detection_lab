@@ -28,6 +28,7 @@ object_detection_lab/
 │   ├── evaluate.py             # 按类别评估测试集，保存结果与错误案例
 │   ├── export_jetson.py        # 在 Jetson 上导出 TensorRT engine
 │   ├── collect_data.py         # 采集个人数据（--mode train/test）
+│   ├── sync_to_jetson.sh       # 打包权重+部署代码，scp 到 Jetson
 │   └── download_dataset.py     # 从 Roboflow 下载公开数据集
 ├── jetson/
 │   └── detect.py               # Jetson 实时识别程序（FPS + 保存结果）
