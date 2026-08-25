@@ -131,9 +131,13 @@ def main():
 
     # 写输出：train 分区 = cups + mice，val 分区 = cups + mice
     # 加前缀避免重名（cu_* 杯子 / mo_* 鼠标）
+    # 先清空输出目录，避免上次运行的残留文件造成 train/val 交叉重复（数据泄漏）
     for split_name in ['train', 'val']:
         out_img = os.path.join(args.out, 'images', split_name)
         out_lbl = os.path.join(args.out, 'labels', split_name)
+        for d in (out_img, out_lbl):
+            if os.path.isdir(d):
+                shutil.rmtree(d)
         os.makedirs(out_img, exist_ok=True)
         os.makedirs(out_lbl, exist_ok=True)
         cup_items = cup_train if split_name == 'train' else cup_val
