@@ -1,0 +1,32 @@
+35b4b47 init: project structure
+6b3cb0b feat: add dataset download script
+4555ba3 feat: add data.yaml for cup detection
+dae49d9 feat: add training scripts, config, and update gitignore
+3c66430 feat: add training scripts and configuration
+cc606d7 feat: add mouse detection training script
+6753ef4 results: add combined model training curve
+ba0ebc7 feat: add combined model training script and config
+d7d11f2 feat: add data collection script for test images
+7617c71 feat: add ROS2 detection node for combined model
+f4bad99 test: re-evaluate combined model after fixing labels
+19eb64b feat: add dataset preparation scripts (COCO mouse extraction + balanced dataset builder)
+367c42a feat: improve training script (yolov8s, cos_lr, MPS) and add per-class evaluation, train/test data collection
+0685653 feat: add Jetson TensorRT export and real-time detection program with FPS and error-case saving
+f9ffcd5 feat: complete ROS2 package scaffolding and improve detection node with CLI params
+4a91181 docs: add complete workflow README with acceptance criteria mapping
+73133b1 fix(build): collect_samples 支持扁平/Roboflow/拆分三种目录布局；提交个人测试集 test_images（20 张，10 cup + 10 mouse）
+9752892 fix(build): 重建前清空输出目录，修复 train/val 交叉重复导致的数据泄漏
+06383b3 fix(train): 权重缺失时从 hf-mirror 下载兜底，避免 GitHub 被屏蔽导致卡死；本地 yolov8s.pt 直接复用
+2bedbc5 docs: 更新数据集来源为 Roboflow、记录 GitHub 屏蔽/镜像方案与构建脚本修复
+38a33c5 docs: 新增个人数据采集+标注指南（解决域差异），与 collect_data.py 配套
+ce0860a feat(deploy): 新增 sync_to_jetson.sh，一键打包权重+部署代码同步到 Jetson
+54c5b61 feat(cloud): 新增 AutoDL 一键训练脚本 run_training.sh，打包云训练包
+4fcdae6 docs: 补充 AutoDL 云端训练流程与 sync_cloud.sh 打包脚本
+025bf01 fix(cloud): run_training.sh 对无 torch 环境给出明确激活指引
+e8a0f2a docs: AutoDL 云端训练指南（含 GitHub 镜像/Arial/yolo26n AMP/pkill 陷阱等坑）
+11f5823 feat(result): 记录最终训练与测试结果（mAP50=0.975，个人测试集 19/20=95%，cup 100%/mouse 90%，1 例边缘目标误判）
+f7006da feat(result): 提交个人测试集结果 CSV、错误案例与训练图表（验收材料）
+9f46ec7 chore(report): 补充报告素材与 gitignore 清理
+dcf5d95 fix(cloud): run_training.sh 用 for 循环探测带 torch 的 python
+6bdfeba fix(jetson): 部署代码真机可用性修复
+11d8b5c feat(deploy): sync_to_jetson.sh 支持 --local 本地打包；新增真机 runbook

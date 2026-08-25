@@ -1,0 +1,28 @@
+%% 由 scripts/gen_report_assets.py 生成
+\begin{table}[htbp]
+\centering
+\caption{个人测试集按类别准确率（验收要求整体 $\geq 80\%$）}
+\begin{tabular}{l c c c c}
+\toprule
+类别 & 测试数 & 正确 & 正确率 & 平均置信度 \\
+\midrule
+cup & 10 & 10 & 100\% & 0.861 \\
+mouse & 10 & 9 & 90\% & 0.871 \\
+\midrule 总体 & 20 & 19 & 95\% & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% 混淆情况（行=真值，列=预测）
+\begin{table}[htbp]
+\centering
+\caption{混淆矩阵（行：真值，列：预测，none=未检出）}
+\begin{tabular}{l c c c}
+\toprule
+真值$\backslash$预测 & cup & mouse & none \\
+\midrule
+cup & 10 & 0 & 0 \\
+mouse & 1 & 9 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
