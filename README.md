@@ -16,9 +16,8 @@ object_detection_lab/
 ├── public_data/
 │   ├── cup/                    # 公开杯子数据集（Roboflow，class 0）
 │   ├── combined/               # 旧合并数据集（缺鼠标标注，已弃用）
-│   ├── coco/
-│   │   ├── raw/                # COCO 下载缓存（val2017.zip + 标注）
-│   │   └── extracted/          # 从 COCO 抽取的鼠标图片（class 1）
+│   ├── mouse_rf_653/           # Roboflow Computer-Mouse v2（653 项目、1110 张，CC BY 4.0）
+│   ├── mouse_rf/               # Roboflow Computer-Mouse v15（5747 张，可选补充）
 │   └── balanced/               # 平衡后的合并数据集（train/val + data_balanced.yaml）
 ├── personal_data/              # 个人采集训练数据（可选，用于减少域差异）
 ├── test_images/{cup,mouse}     # 个人测试集（20 张，10+10，不参与训练）
@@ -41,18 +40,19 @@ object_detection_lab/
 ### 1. 准备数据集
 
 ```bash
-# 1.1 从 COCO 抽取鼠标样本（补少数类）——需先下载 COCO val2017（见 public_data/coco/raw/）
-python3 scripts/extract_coco.py \
-    --annotations public_data/coco/raw/annotations/instances_val2017.json \
-    --images public_data/coco/raw/val2017 \
-    --out public_data/coco/extracted \
-    --categories mouse:1 \
-    --min-side 20 --min-area 400
+# 1.1 获取鼠标样本（Roboflow Computer-Mouse，CC BY 4.0）
+# 用 scripts/download_dataset.py 里的 Roboflow API key，通过 rfapi.get_version_export()
+# 拿到直链后用 aria2 下载（GitHub/部分网站在国内被限速，见「已知问题」）：
+#   项目 machine-learning-chipg/computer-mouse-tqzgh v2  → public_data/mouse_rf_653/
+#   项目 (Computer-Mouse v15, 5747 张)                   → public_data/mouse_rf/（可选补充）
+# 解压后得到 {train,valid,test}/images + {train,valid,test}/labels（black-mouse + white-mouse 两类）
+# 构建脚本会把它们统一重映射为 class 1 (mouse)。
 
 # 1.2 合并 cup + mouse，平衡多数类，划分 train/val
+# 输出 1500 cup : 1110 mouse（实例级 2310:1118），无 train/val 交叉重复
 python3 scripts/build_combined_dataset.py \
     --cup-src public_data/combined \
-    --mouse-src public_data/coco/extracted \
+    --mouse-src public_data/mouse_rf_653/extracted \
     --out public_data/balanced \
     --max-cups 1500 \
     --val-split 0.15
@@ -109,7 +109,13 @@ ros2 run detection_pkg detection_node --ros-args \
 
 ## 已知问题与改进记录
 
-- 旧合并数据集 `public_data/combined` **缺少鼠标标注**（3191 cup / 0 mouse），导致旧模型把鼠标全识别成杯子。已通过 COCO 抽取鼠标样本重建平衡数据集。
+- 旧合并数据集 `public_data/combined` **缺少鼠标标注**（3191 cup / 0 mouse），导致旧模型把鼠标全识别成杯子（测试 10 只鼠标 0 命中）。
+  已改用 Roboflow Computer-Mouse 数据集重建平衡数据集（1500 cup : 1110 mouse）。
+- 最初尝试从 COCO val2017 抽取鼠标数据，但 COCO 官方下载在国内被严重限速且标注 zip CRC 损坏，故弃用 COCO、改用 Roboflow API。
+- **GitHub Releases 在本机不可达**（github.com 下载超时），ultralytics 自动下载权重会卡死；
+  `train_combined.py` 已加 `ensure_weights()`：本地无权重时从 hf-mirror.com 镜像下载。
+- `build_combined_dataset.py` 已修复两处 bug：①支持扁平 / Roboflow / 拆分三种目录布局；
+  ②重建前清空输出目录，避免上一次运行残留导致 train/val 交叉重复（数据泄漏）。
 - 公开数据训练的模型对个人桌面环境存在域差异，建议用 `collect_data.py --mode train` 采集
-  100+ 张个人图片（含鼠标）补充训练。
+  100+ 张个人图片（含鼠标）补充训练，或用 `--max-cups` 加入更多个人杯数据。
 - `data_combined.yaml` 中的 `/root` 路径为 Jetson 专用；Mac 训练请使用 `public_data/balanced/data_balanced.yaml`。
