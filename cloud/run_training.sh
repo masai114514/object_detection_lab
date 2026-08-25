@@ -11,21 +11,27 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "=== 1. 环境检查 ==="
-if ! python3 -c "import torch, torch.cuda; print('torch', torch.__version__, '| CUDA:', torch.cuda.is_available(), '|', torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')" 2>/dev/null; then
-  echo "错误：当前 python 环境没有可用的 torch+CUDA。"
-  echo "AutoDL 请在创建实例时选「PyTorch」镜像，或登录后激活已有 conda 环境："
-  echo "  conda activate base   # 或 conda env list 查看可用环境"
+echo "=== 0. 寻找带 torch 的 python ==="
+PY=""
+for c in python3 /root/miniconda3/bin/python3 /opt/conda/bin/python3 /root/miniconda3/envs/*/bin/python; do
+  if [ -x "$c" ] && "$c" -c "import torch" >/dev/null 2>&1; then PY="$c"; break; fi
+done
+if [ -z "$PY" ]; then
+  echo "错误：未找到带 torch 的 python。AutoDL 请选「PyTorch」镜像，或用 conda activate 激活环境。"
   exit 1
 fi
-python3 -c "import ultralytics" 2>/dev/null || { echo "安装 ultralytics ..."; pip install -q -U ultralytics; }
+echo "使用 python: $PY"
+
+echo "=== 1. 环境检查 ==="
+"$PY" -c "import torch; print('torch', torch.__version__, '| CUDA:', torch.cuda.is_available(), '|', torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
+"$PY" -c "import ultralytics" 2>/dev/null || { echo "安装 ultralytics ..."; "$PY" -m pip install -q -U ultralytics; }
 
 echo "=== 2. 开始训练（yolov8s, 150 epochs, CUDA）==="
-python3 scripts/train_combined.py
+"$PY" scripts/train_combined.py
 
 echo "=== 3. 在个人测试集上评估 ==="
 BEST=runs/detect/combined_model_v3/weights/best.pt
-python3 scripts/evaluate.py --model "$BEST" --test-root test_images --conf 0.25
+"$PY" scripts/evaluate.py --model "$BEST" --test-root test_images --conf 0.25
 
 echo ""
 echo "=== 完成 ==="
