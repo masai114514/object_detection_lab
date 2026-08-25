@@ -1,53 +1,25 @@
 __pycache__/
 *.pyc
+.DS_Store
+*.tar.gz
+
+# 数据集（体积大，不入库；由脚本重建）
+public_data/
+
+# 模型权重 / 部署产物
+*.pt
+*.onnx
+*.engine
+
+# 训练输出目录（runs/ 与 results/ 按目录整体排除）
+#
+# 注意：git 规则不允许「父目录被排除时，用否定模式重新包含其下的文件」，
+# 所以 `!runs/detect/.../results.png` 这类写法是无效的（已实测）。
+# 验收材料（test_results.csv、错误案例、训练图表）用显式命令提交：
+#   git add -f results/test_results.csv results/error_cases/ runs/detect/combined_model_v3/
+# 历史参考：这些文件已在 git 中，后续覆盖只产生修改、不会触发忽略。
 runs/
 results/
-.DS_Store
-*.tar.gz
-public_data/
-*.pt
-*.onnx
-*.engine
-runs/
-!runs/detect/cup_model/results.png
-!runs/detect/cup_model/results.csv
-
-# 忽略整个 runs 目录
-runs/
-
-# 但允许提交训练结果中的图表和指标文件
-!runs/detect/cup_model/results.png
-!runs/detect/cup_model/results.csv
-!runs/detect/cup_model/confusion_matrix.png
-!runs/detect/cup_model/PR_curve.png
-
-# Mac 系统文件
-.DS_Store
-
-# 压缩包
-*.tar.gz
-
-# 数据集
-public_data/
-
-# 模型权重
-*.pt
-*.onnx
-*.engine
-
-# 但允许提交测试结果与错误案例（验收要求）
-!results/test_results.csv
-!results/error_cases/
-
-# 新版双类模型的训练图表（报告用）
-!runs/detect/combined_model_v3/results.csv
-!runs/detect/combined_model_v3/results.png
-!runs/detect/combined_model_v3/confusion_matrix.png
-!runs/detect/combined_model_v3/confusion_matrix_normalized.png
-!runs/detect/combined_model_v3/BoxPR_curve.png
-!runs/detect/combined_model_v3/BoxF1_curve.png
-!runs/detect/combined_model_v3/labels.jpg
-!runs/detect/combined_model_v3/val_batch0_pred.jpg
 
 # 云训练打包产物（按需重新生成）
 cloud_train.tar.gz
