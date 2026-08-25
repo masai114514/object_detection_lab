@@ -1,0 +1,4 @@
+train: /root/public_data/combined/images/train
+val: /root/public_data/combined/images/val
+nc: 2
+names: ['cup', 'mouse']
