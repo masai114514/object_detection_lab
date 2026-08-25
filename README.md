@@ -59,12 +59,20 @@ python3 scripts/build_combined_dataset.py \
     --val-split 0.15
 ```
 
-### 2. 训练（Mac 上用 MPS）
+### 2. 训练（Mac MPS 或 AutoDL 云 GPU）
 
 ```bash
+# 2.1 本地（Mac MPS，慢，~5 min/epoch）
 python3 scripts/train_combined.py                 # yolov8s, 150 epochs, cos_lr
 python3 scripts/train_combined.py --model yolov8m.pt --epochs 200   # 可选调参
+
+# 2.2 AutoDL 云 GPU（推荐，快 10 倍以上）
+# 打包：bash scripts/sync_cloud.sh  或手动 tar（见 scripts/sync_cloud.sh）
+# 上传 scp 后，在实例上执行：bash cloud/run_training.sh
 ```
+
+AutoDL 流程：把 `cloud_train.tar.gz`（数据集 + 脚本 + 权重 + 测试集）scp 到实例
+`/root/autodl-tmp/`，解压后 `bash cloud/run_training.sh`，训练结束自动在个人测试集上评估。
 
 权重输出到 `runs/detect/combined_model_v3/weights/best.pt`。训练完成后查看 `results.csv` 中
 `metrics/mAP50(B)`，双类任务目标 ≥ 0.85。
