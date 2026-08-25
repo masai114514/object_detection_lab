@@ -23,3 +23,13 @@ results/
 
 # 云训练打包产物（按需重新生成）
 cloud_train.tar.gz
+
+# LaTeX 编译产物（模板与素材入库，编译出的文件不入库）
+report/*.aux
+report/*.log
+report/*.toc
+report/*.out
+report/*.lof
+report/*.lot
+report/*.synctex.gz
+report/*.pdf
