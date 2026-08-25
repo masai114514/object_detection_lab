@@ -34,3 +34,6 @@ public_data/
 *.pt
 *.onnx
 *.engine
+
+# 云训练打包产物（按需重新生成）
+cloud_train.tar.gz
