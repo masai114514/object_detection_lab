@@ -12,7 +12,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "=== 1. 环境检查 ==="
-python3 -c "import torch; print('torch', torch.__version__, '| CUDA:', torch.cuda.is_available(), '|', torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
+if ! python3 -c "import torch, torch.cuda; print('torch', torch.__version__, '| CUDA:', torch.cuda.is_available(), '|', torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')" 2>/dev/null; then
+  echo "错误：当前 python 环境没有可用的 torch+CUDA。"
+  echo "AutoDL 请在创建实例时选「PyTorch」镜像，或登录后激活已有 conda 环境："
+  echo "  conda activate base   # 或 conda env list 查看可用环境"
+  exit 1
+fi
 python3 -c "import ultralytics" 2>/dev/null || { echo "安装 ultralytics ..."; pip install -q -U ultralytics; }
 
 echo "=== 2. 开始训练（yolov8s, 150 epochs, CUDA）==="
