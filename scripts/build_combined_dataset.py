@@ -26,25 +26,62 @@ import shutil
 IMG_EXTS = ('.jpg', '.jpeg', '.png')
 
 
+def _sibling_labels_dir(img_dir: str) -> str:
+    """给定含图片文件的目录，返回对应的标签目录。
+
+    规则：把路径中最后一个 'images' 段替换为 'labels'，兼容三种布局：
+    - 扁平：{dir}/images/*.jpg  -> {dir}/labels/
+    - Roboflow：{dir}/train/images/*.jpg -> {dir}/train/labels/
+    - 拆分：{dir}/images/train/*.jpg -> {dir}/labels/train/
+    """
+    parts = img_dir.split(os.sep)
+    for i in range(len(parts) - 1, -1, -1):
+        if parts[i] == 'images':
+            parts[i] = 'labels'
+            return os.path.join(*parts)
+    # 没有 images 段：假定 labels 与图片同级
+    return os.path.join(img_dir, 'labels')
+
+
 def collect_samples(data_dir: str, class_id: int):
-    """收集一个 YOLO 数据目录下的所有样本，返回 [(图片路径, 标签文本)]。"""
+    """
+    收集一个 YOLO 数据目录下的所有样本，返回 [(图片路径, 标签文本)]。
+
+    递归扫描所有直接含图片文件的目录，对应标签目录由 _sibling_labels_dir 推导。
+    标签中的类别号统一重映射为 class_id（合并时 mouse 源用 1）。
+    """
     samples = []
-    img_dir = os.path.join(data_dir, 'images')
-    lbl_dir = os.path.join(data_dir, 'labels')
-    if not os.path.isdir(img_dir):
-        return samples
-    for root, _, files in os.walk(img_dir):
-        for fname in files:
+    seen = set()
+    for root, _, files in os.walk(data_dir):
+        if not any(f.lower().endswith(IMG_EXTS) for f in files):
+            continue
+        lbl_dir = _sibling_labels_dir(root)
+        for fname in sorted(files):
             if not fname.lower().endswith(IMG_EXTS):
                 continue
             img_path = os.path.join(root, fname)
             stem = os.path.splitext(fname)[0]
             lbl_path = os.path.join(lbl_dir, f'{stem}.txt')
-            if os.path.exists(lbl_path):
-                with open(lbl_path) as f:
-                    label_txt = f.read().strip()
-                if label_txt:
-                    samples.append((img_path, label_txt))
+            if not os.path.exists(lbl_path):
+                continue
+            with open(lbl_path) as f:
+                lines = f.read().strip().splitlines()
+            if not lines:
+                continue
+            # 重映射类别号
+            remapped = []
+            for line in lines:
+                parts = line.split()
+                if len(parts) >= 5:
+                    parts[0] = str(class_id)
+                    remapped.append(' '.join(parts))
+            if not remapped:
+                continue
+            key = os.path.abspath(img_path)
+            if key in seen:
+                continue
+            seen.add(key)
+            samples.append((img_path, '\n'.join(remapped)))
     return samples
 
 
