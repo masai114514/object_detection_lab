@@ -26,6 +26,9 @@ jetson_deploy/
 检查：`cat /etc/nv_tegra_release`（JetPack 版本）、`ls /dev/video*`（摄像头）、
 `ls /opt/ros/`（ROS2 是否已装）。
 
+> 如果板子系统已由实验室预装（无需刷机）：跳过本文「1. 把包拷到 Jetson」之前的
+> 系统准备，直接核对上述三行检查 + 老师给的账户密码即可。
+
 ## 1. 把包拷到 Jetson
 
 **方式 A：scp**（Jetson 与本机同一局域网）

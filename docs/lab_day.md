@@ -4,12 +4,30 @@
 
 ## 出门前检查
 
-- [ ] microSD 卡**已刷好 JetPack**（在家用 Etcher 刷，镜像 6-8GB 提前下）
+- [ ] **板子系统由实验室预装**（老师确认过，无需自己刷卡）
+      —— 但请向老师确认：① 启动账户名/密码；② 是否已含 JetPack 的
+      torch / OpenCV / ROS2（见下「如果系统已预装」）
 - [ ] `jetson_deploy.tar.gz` 已拷进 U 盘（在仓库根目录，23M）
 - [ ] 板子 + 电源适配器 + USB 摄像头
 - [ ] HDMI 线（或 DP 线）
 - [ ] USB 键盘 + 鼠标
 - [ ] 网线（校园网）＋ 插线板（可选）
+
+> 如果板子其实没系统（或想留备份），才需要 microSD 64GB+ + Etcher 刷 JetPack
+> （方法见 docs/jetson_deploy.md 第 1 节）。有系统则跳过，省一大步。
+
+## 如果系统已预装
+
+```bash
+# 开机后用老师给的账户登录，2 秒确认环境：
+cat /etc/nv_tegra_release           # 有输出 = JetPack 正常
+python3 -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+ls /opt/ros/                        # 有 foxy 或 humble = ROS2 就位
+ls /dev/video*                      # 摄像头在
+```
+- 若 torch/ROS2 都有 → 直接跳「部署四步」，只装 ultralytics 即可；
+- 若只是裸 Ubuntu 没有 torch → 装 JetPack 或 NVIDIA 提供的 torch（较麻烦，
+  先找老师确认系统镜像是不是 JetPack）；
 
 ## 到机房接线
 
