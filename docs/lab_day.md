@@ -61,11 +61,11 @@ cd ~/jetson_app/jetson_deploy
 # 1) 装 ultralytics（版本钉在与训练一致）
 pip3 install -U ultralytics==8.4.127      # 慢就加 -i 清华镜像
 
-# 2) 导出 TensorRT engine（5-10 分钟，FP16）
-python3 scripts/export_jetson.py --model models/combined_best.pt --half
+# 2) 推理引擎：直接 torch FP16（学校镜像缺 tensorrt，engine 导不了，见下）
+#    python3 scripts/export_jetson.py --model models/combined_best.pt --half  # 仅完整JetPack可用
 
-# 3) 实时识别（验收：FPS≥5，显示类别/框/置信度）
-python3 jetson/detect.py --model models/combined_best.engine
+# 3) 实时识别（验收：FPS≥5，显示类别/框/置信度；实测 torch FP16 约 24-25 FPS）
+python3 jetson/detect.py --model models/combined_best.pt --half
 #    有显示器：画面按 s 记录真值、q 退出
 #    只插电无屏/SSH：加 --no-show --save-interval 3（终端打印 FPS）
 
@@ -81,8 +81,8 @@ cd ~/jetson_app/jetson_deploy/ros2_ws
 colcon build --symlink-install
 source install/setup.bash
 ros2 run detection_pkg detection_node --ros-args \
-    -p model_path:=$HOME/jetson_app/jetson_deploy/models/combined_best.engine \
-    -p camera_index:=0
+    -p model_path:=$HOME/jetson_app/jetson_deploy/models/combined_best.pt \
+    -p camera_index:=0 -p device:=0 -p half:=true -p show:=false
 # 另一个终端：
 source /opt/ros/<foxy|humble>/setup.bash
 ros2 topic echo /detections
@@ -94,10 +94,10 @@ ros2 topic echo /detections
 |------|------|
 | 显示器无信号 | 检查信号源是否切到 HDMI；HDMI 线是否插板子的视频口；重插电源重启 |
 | 网不通 | 浏览器登录校园网认证页；或用手机热点 + USB WiFi |
-| FPS 只有几帧 | 确认加载 `.engine`（不是 `.pt`）且导出时用了 `--half` |
+| FPS 只有几帧 | 确认加了 `--half` 且用 GPU（`--device 0`）；`.pt` 别省 `--half` |
 | pip 很慢/失败 | 加 `-i https://pypi.tuna.tsinghua.edu.cn/simple`；或让 pip 走镜像 |
 | 摄像头打不开 | `ls /dev/video*`；换 USB 口重插 |
-| 导出卡住下载 | 推理不触发 AMP/GitHub 下载；卡住多半是网络，加镜像重试 |
+| `import tensorrt` 失败 | 学校镜像缺 `libnvdla_compiler.so`，**不要尝试装 tensorrt**；直接用 `.pt --half` 跑（24-25 FPS） |
 
 ## 离开机房前要带走的
 
