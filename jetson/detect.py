@@ -34,6 +34,8 @@ def main():
     ap.add_argument('--source', default='0', help='摄像头索引或视频文件')
     ap.add_argument('--conf', type=float, default=0.25)
     ap.add_argument('--imgsz', type=int, default=640)
+    ap.add_argument('--device', default='0', help='推理设备（.pt 用，默认 GPU 0）')
+    ap.add_argument('--half', action='store_true', help='FP16 推理（.pt 用，可提升 FPS）')
     ap.add_argument('--out', default='results')
     ap.add_argument('--no-show', action='store_true',
                     help='无显示环境（SSH 无 DISPLAY）：自动存帧+打印 FPS，不弹窗、不做交互')
@@ -71,7 +73,8 @@ def main():
         if not ret:
             break
 
-        results = model(frame, imgsz=args.imgsz, conf=args.conf, verbose=False)[0]
+        results = model(frame, imgsz=args.imgsz, conf=args.conf,
+                        device=args.device, half=args.half, verbose=False)[0]
         detections = []
         if results.boxes is not None:
             for box in results.boxes:
