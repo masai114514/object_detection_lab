@@ -80,12 +80,12 @@
   引入 Roboflow 公开数据补充训练并构造 1500:1110 的平衡数据集，采用 COCO 预训练
   权重迁移学习微调双类模型。训练在云端 RTX 5090 上约 70 分钟完成，验证集
   mAP50 达 0.975；在自采集的 20 张个人测试集上，杯子 100\%、鼠标 90\%、
-  总体 95\%，满足验收要求（$\geq 80\%$）。模型经 TensorRT FP16 量化后在
-  Jetson Orin NX 上实时运行，FPS 远超 5 帧/秒的验收下限，识别结果通过
-  ROS2 话题 /detections 实时发布。最后对典型错误案例进行了分析并给出改进方向。
+  总体 95\%，满足验收要求（$\geq 80\%$）。模型在 Jetson Orin NX 上以
+  PyTorch FP16（CUDA）实时推理，实测约 25 FPS，远超 5 帧/秒的验收下限；
+  识别结果通过 ROS2 话题 /detections 实时发布。最后对典型错误案例进行了分析并给出改进方向。
 
   \vspace{0.6em}
-  \noindent\textbf{关键词}：目标检测；YOLOv8；迁移学习；Jetson；TensorRT；ROS2
+  \noindent\textbf{关键词}：目标检测；YOLOv8；迁移学习；Jetson；FP16 推理；ROS2
 \end{abstract}
 
 \tableofcontents
@@ -124,8 +124,8 @@
     训练（云端） & AutoDL RTX 5090（32 GB）/ Ubuntu & torch 2.12.1+cu130、CUDA 13.0、
       ultralytics 8.4.127 \\
     评估 & 个人电脑 / macOS & OpenCV、自研 evaluate.py \\
-    部署 & Jetson Orin NX / JetPack 5.1+ & TensorRT（FP16）、OpenCV、
-      ROS2（Humble/Foxy） \\
+    部署 & Jetson Orin NX / JetPack 6.x & PyTorch FP16（CUDA）、OpenCV、
+      ROS2（Humble） \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -285,7 +285,7 @@ YOLOv8 采用 CSPDarknet 骨干与 anchor-free 检测头，包含 C2f 模块与�
       arrow/.style={-{Stealth}, thick},
     ]
     \node[box] (cam) {USB/CSI\\摄像头};
-    \node[box, right=1.6cm of cam] (eng) {TensorRT engine\\yolov8s@640 FP16};
+    \node[box, right=1.6cm of cam] (eng) {PyTorch FP16\\yolov8s@640 CUDA};
     \node[box, right=1.6cm of eng] (det) {实时识别程序\\绘制框+置信度+FPS};
     \node[box, right=1.6cm of det] (ros) {ROS2 节点\\发布 /detections};
     \draw[arrow] (cam) -- (eng);
@@ -295,20 +295,24 @@ YOLOv8 采用 CSPDarknet 骨干与 anchor-free 检测头，包含 C2f 模块与�
   \caption{Jetson 端推理与发布流程}
 \end{figure}
 
-\subsection{TensorRT 加速}
-将训练得到的 \texttt{best.pt} 在 Jetson 上导出为 FP16 TensorRT engine：
+\subsection{FP16 加速推理}
+将训练得到的 \texttt{best.pt} 加载到 Jetson 的 CUDA GPU 上，以 FP16 精度实时推理：
 \begin{lstlisting}[style=code,language=bash]
-python3 scripts/export_jetson.py --model models/combined_best.pt --half
-# 产出 models/combined_best.engine
+python3 jetson/detect.py --model models/combined_best.pt --half
+# SSH 无显示环境：加 --no-show --save-interval 3（自动存帧 + 打印 FPS）
 \end{lstlisting}
-FP16 量化后 yolov8s@640 在 Orin NX 上实测 \textbf{30+ FPS}，远超 5 FPS 的验收下限；
-且推理可在无显示器（SSH）环境下以 \texttt{--no-show} 模式自动存帧并打印 FPS。
+FP16 CUDA 推理下 yolov8s@640 在 Orin NX 上实测 \textbf{24--25 FPS}，远超 5 FPS 的
+验收下限。\footnote{本实验板子的 JetPack 镜像缺少 \texttt{libnvdla\_compiler.so}，
+TensorRT 的 Python 绑定无法导入，故采用 PyTorch FP16 直推；若后续换成完整 JetPack
+SDK，可导出 TensorRT FP16 engine 进一步提升至 30+ FPS。}且推理可在无显示器（SSH）
+环境下以 \texttt{--no-show} 模式自动存帧并打印 FPS。
 
 \subsection{ROS2 发布}
 \begin{lstlisting}[style=code,language=bash]
 cd ros2_ws && colcon build --symlink-install && source install/setup.bash
 ros2 run detection_pkg detection_node --ros-args \
-    -p model_path:=$HOME/models/combined_best.engine -p camera_index:=0
+    -p model_path:=$HOME/models/combined_best.pt -p camera_index:=0 \
+    -p device:=0 -p half:=true -p show:=false
 # 另一终端订阅：
 ros2 topic echo /detections
 \end{lstlisting}
@@ -323,7 +327,7 @@ ros2 topic echo /detections
 \begin{itemize}
   \item 完成杯、鼠双类 YOLOv8 检测模型：验证集 mAP50 = 0.975；
   \item 个人测试集 20 张：cup 100\% / mouse 90\% / 总体 95\%，满足 $\geq 80\%$ 验收；
-  \item Jetson Orin NX 上 TensorRT FP16 实时运行 30+ FPS，满足 $\geq 5$ FPS，
+  \item Jetson Orin NX 上 FP16 CUDA 实时推理实测 24--25 FPS，满足 $\geq 5$ FPS，
         并实时显示类别/框/置信度；
   \item 检测结果经 ROS2 以 /detections 话题实时发布，可被其他节点消费；
   \item 全部代码、数据与结果以增量提交方式托管于个人 GitHub。
