@@ -22,11 +22,19 @@ import argparse
 import csv
 import json
 import os
+import signal
 import sys
 import time
 
 import cv2
 from ultralytics import YOLO
+
+# 收到 SIGTERM/SIGINT 时置位，让主循环正常收尾（release 视频写入器，保证 mp4 完好）
+_STOP = {'flag': False}
+
+
+def _on_signal(signum, frame):
+    _STOP['flag'] = True
 
 
 def main():
@@ -38,6 +46,8 @@ def main():
     ap.add_argument('--device', default='0', help='推理设备（.pt 用，默认 GPU 0）')
     ap.add_argument('--half', action='store_true', help='FP16 推理（.pt 用，可提升 FPS）')
     ap.add_argument('--record', default='', help='录制输出视频路径（mp4），帧上始终叠加 FPS')
+    ap.add_argument('--duration', type=float, default=0,
+                    help='自动运行秒数，到点正常收尾退出（保证录制 mp4 完整，默认不限时）')
     ap.add_argument('--out', default='results')
     ap.add_argument('--no-show', action='store_true',
                     help='无显示环境（SSH 无 DISPLAY）：自动存帧+打印 FPS，不弹窗、不做交互')
@@ -76,9 +86,22 @@ def main():
     fps = 0.0
     last = time.time()
     last_save = 0.0
+    start_t = time.time()
+    if args.duration:
+        print(f"自动运行 {args.duration:.0f}s 后正常收尾退出。")
     print(f"{'按 s 保存+记录 / q 退出。' if show else ''}模型: {args.model}")
 
+    signal.signal(signal.SIGTERM, _on_signal)
+    signal.signal(signal.SIGINT, _on_signal)
+
     while True:
+        if _STOP['flag']:
+            print('[signal] 收到终止信号，正常收尾退出。')
+            break
+        if args.duration and (time.time() - start_t) >= args.duration:
+            print(f'[auto] 已运行 {args.duration:.0f}s，正常收尾退出。')
+            break
+        ret, frame = cap.read()
         ret, frame = cap.read()
         if not ret:
             break
