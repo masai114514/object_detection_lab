@@ -43,6 +43,8 @@ class DetectionNode(Node):
         self.declare_parameter('camera_index', 0)
         self.declare_parameter('conf', 0.25)
         self.declare_parameter('imgsz', 640)
+        self.declare_parameter('device', '0')   # .pt 模型推理设备（默认 GPU 0）
+        self.declare_parameter('half', False)   # .pt 模型 FP16 推理，提升 FPS
         self.declare_parameter('topic', 'detections')
         self.declare_parameter('out_dir', 'results')
         self.declare_parameter('show', True)   # 显式关闭；Linux 无 DISPLAY 时自动关闭
@@ -51,6 +53,8 @@ class DetectionNode(Node):
         camera_index = self.get_parameter('camera_index').value
         self.conf = self.get_parameter('conf').value
         self.imgsz = self.get_parameter('imgsz').value
+        self.device = self.get_parameter('device').value
+        self.half = self.get_parameter('half').value
         topic = self.get_parameter('topic').value
         self.out_dir = self.get_parameter('out_dir').value
         self.show = (self.get_parameter('show').value
@@ -80,7 +84,8 @@ class DetectionNode(Node):
             if not ret:
                 break
 
-            results = self.model(frame, imgsz=self.imgsz, conf=self.conf, verbose=False)[0]
+            results = self.model(frame, imgsz=self.imgsz, conf=self.conf,
+                                 device=self.device, half=self.half, verbose=False)[0]
             detections = []
             if results.boxes is not None:
                 for box in results.boxes:
