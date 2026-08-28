@@ -36,7 +36,7 @@
   colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue,
   bookmarksnumbered=true, pdfstartview=FitH,
   pdftitle={实验一：目标检测与识别},
-  pdfauthor={姓名待填},
+  pdfauthor={马晨曦},
 }
 
 \captionsetup{font=small}
@@ -58,16 +58,16 @@
   {\zihao{2}\heiti 实验一：目标检测与识别}\\[0.4cm]
   {\zihao{4}\songti —— 基于 YOLOv8 的桌面杯鼠双类检测与 ROS2 实时发布 ——}\\[2.2cm]
 
-  \renewcommand{\arraystretch}{2.0}
+  \renewcommand{\arraystretch}{1.8}
   \zihao{4}
-  \begin{tabular}{r@{\hspace{0.6em}}l}
-    课程名称 & \underline{\hspace{7.5em} 计算机视觉 \hspace{7.5em}} \\[0.4em]
-    实验名称 & \underline{\hspace{7.5em} 实验一 \hspace{7.5em}} \\[0.4em]
-    姓\qquad 名 & \underline{\hspace{16.5em}} \\[0.4em]
-    学\qquad 号 & \underline{\hspace{16.5em}} \\[0.4em]
-    班\qquad 级 & \underline{\hspace{16.5em}} \\[0.4em]
-    指导教师 & \underline{\hspace{16.5em}} \\[0.4em]
-    完成日期 & \underline{\hspace{16.5em} 2026 年 8 月 \hspace{16.5em}} \\[0.4em]
+  \begin{tabular}{r@{\hspace{0.8em}}l}
+    课程名称 & \underline{\makebox[10em]{计算机视觉}} \\[0.4em]
+    实验名称 & \underline{\makebox[10em]{实验一}} \\[0.4em]
+    姓\qquad 名 & \underline{\makebox[10em]{马晨曦}} \\[0.4em]
+    学\qquad 号 & \underline{\makebox[10em]{24020036047}} \\[0.4em]
+    班\qquad 级 & \underline{\makebox[10em]{中外合作办学2班}} \\[0.4em]
+    指导教师 & \underline{\makebox[10em]{}} \\[0.4em]
+    完成日期 & \underline{\makebox[10em]{2026 年 8 月}} \\[0.4em]
   \end{tabular}
 \end{center}
 \clearpage
@@ -114,7 +114,7 @@
 \begin{table}[htbp]
   \centering
   \caption{实验环境与软件栈}
-  \begin{tabular}{l l l}
+  \begin{tabular}{p{2.2cm} p{3.8cm} p{7.6cm}}
     \toprule
     阶段 & 硬件 / 系统 & 关键软件 \\
     \midrule
@@ -279,15 +279,15 @@ YOLOv8 采用 CSPDarknet 骨干与 anchor-free 检测头，包含 C2f 模块与�
 \begin{figure}[htbp]
   \centering
   \begin{tikzpicture}[
-      node distance=0.4cm, auto,
+      node distance=0.3cm, auto,
       box/.style={draw, rectangle, rounded corners, minimum height=1.1cm,
-                  align=center, text width=3.2cm, font=\small},
+                  align=center, text width=2.9cm, font=\small},
       arrow/.style={-{Stealth}, thick},
     ]
     \node[box] (cam) {USB/CSI\\摄像头};
-    \node[box, right=1.6cm of cam] (eng) {PyTorch FP16\\yolov8s@640 CUDA};
-    \node[box, right=1.6cm of eng] (det) {实时识别程序\\绘制框+置信度+FPS};
-    \node[box, right=1.6cm of det] (ros) {ROS2 节点\\发布 /detections};
+    \node[box, right=0.9cm of cam] (eng) {PyTorch FP16\\yolov8s@640 CUDA};
+    \node[box, right=0.9cm of eng] (det) {实时识别程序\\绘制框+置信度+FPS};
+    \node[box, right=0.9cm of det] (ros) {ROS2 节点\\发布 /detections};
     \draw[arrow] (cam) -- (eng);
     \draw[arrow] (eng) -- (det);
     \draw[arrow] (det) -- (ros);
@@ -307,6 +307,27 @@ TensorRT 的 Python 绑定无法导入，故采用 PyTorch FP16 直推；若后�
 SDK，可导出 TensorRT FP16 engine 进一步提升至 30+ FPS。}且推理可在无显示器（SSH）
 环境下以 \texttt{--no-show} 模式自动存帧并打印 FPS。
 
+\subsection{演示视频与结果验证}
+以 \texttt{--record} 录制 70 秒实时检测视频（640$\times$480，12.24 FPS 重封装为
+真实速度），完整记录三类片段：杯子单独、鼠标单独、两者同框，帧上始终叠加
+类别/置信度/检测框与 FPS 计数。录制使用新增的 \texttt{--duration} 参数，到点由
+程序正常收尾，保证 MP4 文件完整：
+\begin{lstlisting}[style=code,language=bash]
+python3 jetson/detect.py --model models/combined_best.pt --half \
+    --record results_video/demo_detect.mp4 --duration 70
+# 校验（scripts/analyze_video.py 逐帧统计，脚本随仓库提交）
+python3 scripts/analyze_video.py results/video/demo_detect.mp4
+\end{lstlisting}
+对录制视频逐帧校验：杯框出现 60 s、鼠框 60 s、两者同框 51 s、FPS 红字全程
+70 s 均有叠加，双类均被稳定识别。演示视频见 \texttt{results/video/demo\_detect.mp4}，
+其中一帧见图。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth,keepaspectratio]{demo_video_frame.jpg}
+  \caption{演示视频第 55 s 帧：杯、鼠同时检出并实时叠加类别/置信度/检测框与 FPS}
+\end{figure}
+
 \subsection{ROS2 发布}
 \begin{lstlisting}[style=code,language=bash]
 cd ros2_ws && colcon build --symlink-install && source install/setup.bash
@@ -319,7 +340,7 @@ ros2 topic echo /detections
 节点将每帧检测结果以 JSON 字符串发布到 \texttt{/detections} 话题，格式示例：
 \begin{lstlisting}[style=code]
 [{"class": "mouse", "confidence": 0.968,
-  "bbox": [85.7, 753.6, 1090.8, 1332.3]}]
+  "bbox": [85.7, 133.6, 190.8, 232.3]}]
 \end{lstlisting}
 
 \section{结论与展望}
