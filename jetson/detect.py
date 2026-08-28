@@ -16,6 +16,7 @@ Jetson 实时目标检测程序（cup + mouse）。
 在 Jetson 上运行：
     python3 jetson/detect.py --model /home/jetson/models/combined_best.engine            # 有显示器
     python3 jetson/detect.py --model ...engine --no-show --save-interval 3             # SSH 无显示
+    python3 jetson/detect.py --model models/combined_best.pt --half --record demo.mp4   # 录制带框+FPS 视频
 """
 import argparse
 import csv
@@ -36,6 +37,7 @@ def main():
     ap.add_argument('--imgsz', type=int, default=640)
     ap.add_argument('--device', default='0', help='推理设备（.pt 用，默认 GPU 0）')
     ap.add_argument('--half', action='store_true', help='FP16 推理（.pt 用，可提升 FPS）')
+    ap.add_argument('--record', default='', help='录制输出视频路径（mp4），帧上始终叠加 FPS')
     ap.add_argument('--out', default='results')
     ap.add_argument('--no-show', action='store_true',
                     help='无显示环境（SSH 无 DISPLAY）：自动存帧+打印 FPS，不弹窗、不做交互')
@@ -51,6 +53,14 @@ def main():
     cap = cv2.VideoCapture(int(args.source) if args.source.isdigit() else args.source)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+    writer = None
+    if args.record:
+        os.makedirs(os.path.dirname(args.record) or '.', exist_ok=True)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        writer = cv2.VideoWriter(args.record, fourcc, 20.0, (w, h))
 
     csv_path = os.path.join(args.out, 'test_results.csv')
     csv_handle = open(csv_path, 'w', newline='')
@@ -96,9 +106,11 @@ def main():
         fps = 0.9 * fps + 0.1 * (1.0 / (now - last + 1e-6))
         last = now
 
+        # FPS 叠加：有屏显示与录制视频都画
+        cv2.putText(frame, f'FPS: {fps:.1f}', (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+
         if show:
-            cv2.putText(frame, f'FPS: {fps:.1f}', (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
             cv2.imshow('cup+mouse detection', frame)
             key = cv2.waitKey(1) & 0xFF
             if key == ord('s'):
@@ -125,7 +137,12 @@ def main():
                 desc = '; '.join(f"{d['class']} {d['confidence']}" for d in detections) or '无检测'
                 print(f"[{ts}] FPS {fps:.1f} | {desc}")
 
+        if writer is not None:
+            writer.write(frame)
+
     cap.release()
+    if writer is not None:
+        writer.release()
     csv_handle.close()
     if show:
         cv2.destroyAllWindows()
