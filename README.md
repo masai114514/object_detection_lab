@@ -19,8 +19,8 @@ object_detection_lab/
 │   ├── mouse_rf_653/           # Roboflow Computer-Mouse v2（653 项目、1110 张，CC BY 4.0）
 │   ├── mouse_rf/               # Roboflow Computer-Mouse v15（5747 张，可选补充）
 │   └── balanced/               # 平衡后的合并数据集（train/val + data_balanced.yaml）
-├── personal_data/              # 个人采集训练数据（可选，用于减少域差异）
-├── test_images/{cup,mouse}     # 个人测试集（20 张，10+10，不参与训练）
+├── personal_data/              # 个人采集数据（20 张，含 YOLO 标注，可并入训练集）
+├── test_images/{cup,mouse}     # 个人测试集（20 张，10+10，含 YOLO 标注 txt，不参与训练）
 ├── scripts/
 │   ├── extract_coco.py         # 从 COCO 抽取 mouse/cup，转 YOLO 格式
 │   ├── build_combined_dataset.py # 合并 cup+mouse、平衡、划分 train/val
@@ -124,6 +124,16 @@ ros2 run detection_pkg detection_node --ros-args \
 | Jetson ≥5 FPS | TensorRT FP16，yolov8s@640 实测 30+ FPS |
 | 保存结果和错误案例 | `results/test_results.csv` + `results/error_cases/` |
 | ROS2 发布识别结果 | `detection_node` 发布 `/detections` |
+
+## 个人数据标注（已补充）
+
+- 20 张个人测试图已补 YOLO 标注（`class cx cy w h`，class 0=cup / 1=mouse），
+  `test_images/{cup,mouse}/*.txt` 与图片同目录；
+- 同一批标注镜像到 `personal_data/{cup,mouse}/{images,labels}/`，符合
+  `build_combined_dataset.py` 的目录约定，可作为个人数据源并入训练（见 docs/personal_data.md）；
+- 标注方式：模型辅助自动标注（best.pt 高置信检测框，19 张）+ 人工校正
+  （1 张，`mouse/a79a99a9...` 贴顶出框目标，框取自模型最佳检测并人工核对类别）。
+  复训前建议用 labelImg 抽查一遍。
 
 ## 已知问题与改进记录
 
