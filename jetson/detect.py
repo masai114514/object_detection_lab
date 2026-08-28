@@ -54,13 +54,13 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    writer = None
+    vwriter = None
     if args.record:
         os.makedirs(os.path.dirname(args.record) or '.', exist_ok=True)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        writer = cv2.VideoWriter(args.record, fourcc, 20.0, (w, h))
+        vwriter = cv2.VideoWriter(args.record, fourcc, 20.0, (w, h))
 
     csv_path = os.path.join(args.out, 'test_results.csv')
     csv_handle = open(csv_path, 'w', newline='')
@@ -137,12 +137,12 @@ def main():
                 desc = '; '.join(f"{d['class']} {d['confidence']}" for d in detections) or '无检测'
                 print(f"[{ts}] FPS {fps:.1f} | {desc}")
 
-        if writer is not None:
-            writer.write(frame)
+        if vwriter is not None:
+            vwriter.write(frame)
 
     cap.release()
-    if writer is not None:
-        writer.release()
+    if vwriter is not None:
+        vwriter.release()
     csv_handle.close()
     if show:
         cv2.destroyAllWindows()
