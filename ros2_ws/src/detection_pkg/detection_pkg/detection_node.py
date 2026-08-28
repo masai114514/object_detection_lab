@@ -43,7 +43,7 @@ class DetectionNode(Node):
         self.declare_parameter('camera_index', 0)
         self.declare_parameter('conf', 0.25)
         self.declare_parameter('imgsz', 640)
-        self.declare_parameter('device', '0')   # .pt 模型推理设备（默认 GPU 0）
+        self.declare_parameter('device', 0)     # .pt 模型推理设备索引（默认 GPU 0）
         self.declare_parameter('half', False)   # .pt 模型 FP16 推理，提升 FPS
         self.declare_parameter('topic', 'detections')
         self.declare_parameter('out_dir', 'results')
@@ -53,7 +53,7 @@ class DetectionNode(Node):
         camera_index = self.get_parameter('camera_index').value
         self.conf = self.get_parameter('conf').value
         self.imgsz = self.get_parameter('imgsz').value
-        self.device = self.get_parameter('device').value
+        self.device = str(self.get_parameter('device').value)  # int→'0'/'1'，兼容 'cpu'
         self.half = self.get_parameter('half').value
         topic = self.get_parameter('topic').value
         self.out_dir = self.get_parameter('out_dir').value
