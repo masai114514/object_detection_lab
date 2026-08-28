@@ -94,6 +94,15 @@ FPS 显示在画面左上角（`--no-show` 时打印在终端）。验收要求 
 **本镜像实测（torch FP16 CUDA）：24~25 FPS**；TensorRT engine 可达 30+。
 **如果明显低于 5 FPS**：确认加了 `--half` 且 device 是 GPU（`--device 0`）。
 
+**录制演示视频**（提交用，带框 + 类别 + 置信度 + FPS）：
+```bash
+python3 jetson/detect.py --model models/combined_best.pt --half \
+    --record results_video/demo_detect.mp4 --duration 70
+# --duration：到点程序正常收尾（不要用 timeout 强杀，否则 mp4 缺索引损坏）
+# 校验帧内容：python3 scripts/analyze_video.py results_video/demo_detect.mp4
+# 若播放速度偏快（录制 fps 低于容器 20fps），用 scripts/remux.py 重封装为真实速度
+```
+
 ## 5. 离线复跑 20 张测试集（验收：≥80%）
 
 ```bash
