@@ -42,8 +42,9 @@ object_detection_lab/
 
 ```bash
 # 1.1 获取鼠标样本（Roboflow Computer-Mouse，CC BY 4.0）
-# 用 scripts/download_dataset.py 里的 Roboflow API key，通过 rfapi.get_version_export()
-# 拿到直链后用 aria2 下载（GitHub/部分网站在国内被限速，见「已知问题」）：
+# 先 export ROBOFLOW_API_KEY=<key>（官网 My Settings 获取，脚本不硬编码密钥）
+# 再运行 scripts/download_dataset.py（用 Roboflow SDK 下载到 public_data/）；
+# 国内下载慢时可浏览器打开下方链接 → Download → 复制 zip 直链用 aria2 加速：
 #   项目 machine-learning-chipg/computer-mouse-tqzgh v2  → public_data/mouse_rf_653/
 #     链接: https://universe.roboflow.com/machine-learning-chipg/computer-mouse-tqzgh/dataset/2
 #   项目 (Computer-Mouse v15, 5747 张)                   → public_data/mouse_rf/（可选补充）
