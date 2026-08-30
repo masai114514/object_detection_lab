@@ -1,3 +1,7 @@
+658f732 材料: 个人测试集补 YOLO 标注并整理 personal_data 训练集结构
+e8546b1 验收材料补全: 提交训练模型权重 best.pt 与编译后的实验报告 PDF
+ac97411 docs: 部署手册补充演示视频录制工作流（--record --duration + 校验/重封装），避免 timeout 强杀产出损坏 mp4
+44eefc2 报告: 填入封面个人信息（姓名/学号/班级）、新增演示视频小节、修复表格超宽
 3948f55 结果: 提交实时检测演示视频（杯+鼠+同框+FPS，70s 真实速度）+ 录制校验工具
 beb96c2 detect.py: 录制视频支持自动收尾（--duration + SIGTERM 处理），保证 mp4 完整
 3120541 detect.py: 修复 --record 变量名冲突（视频写入器改用 vwriter，避免与 CSV writer 同名崩溃）

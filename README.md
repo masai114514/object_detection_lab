@@ -45,9 +45,14 @@ object_detection_lab/
 # 用 scripts/download_dataset.py 里的 Roboflow API key，通过 rfapi.get_version_export()
 # 拿到直链后用 aria2 下载（GitHub/部分网站在国内被限速，见「已知问题」）：
 #   项目 machine-learning-chipg/computer-mouse-tqzgh v2  → public_data/mouse_rf_653/
+#     链接: https://universe.roboflow.com/machine-learning-chipg/computer-mouse-tqzgh/dataset/2
 #   项目 (Computer-Mouse v15, 5747 张)                   → public_data/mouse_rf/（可选补充）
+#     链接: https://universe.roboflow.com/project-e9bly/computer-mouse-fmjvk/dataset/15
 # 解压后得到 {train,valid,test}/images + {train,valid,test}/labels（black-mouse + white-mouse 两类）
 # 构建脚本会把它们统一重映射为 class 1 (mouse)。
+
+# 1.0b 获取杯子样本（Roboflow cup-detection v3，CC BY 4.0）
+#   链接: https://universe.roboflow.com/my-workspace-7j2fi/cup-detection-w8kfb/dataset/3
 
 # 1.2 合并 cup + mouse，平衡多数类，划分 train/val
 # 输出 1500 cup : 1110 mouse（实例级 2310:1118），无 train/val 交叉重复

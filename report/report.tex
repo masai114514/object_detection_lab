@@ -28,6 +28,8 @@
 \usepackage{tikz}            % 架构图
 \usetikzlibrary{positioning,arrows.meta}
 \usepackage{hyperref}
+\usepackage{underscore}        % 允许正文直接书写下划线（URL 含 _，如 Roboflow 链接）
+\usepackage{xurl}              % \url 可在任意字符处断行，长 URL 不溢出
 
 \geometry{top=2.6cm,bottom=2.6cm,left=2.8cm,right=2.8cm}
 \graphicspath{{figures/}}    % 图片目录：report/figures/
@@ -134,10 +136,13 @@
 \subsection{数据来源与构成}
 训练使用公开数据补充、平衡策略如下：
 \begin{itemize}
-  \item \textbf{杯子（class 0）}：Roboflow 公开杯子数据，抽取后取 1500 张；
-  \item \textbf{鼠标（class 1）}：Roboflow Computer-Mouse 数据集（CC BY 4.0，
-    653 项目、1110 张），将其中 \texttt{black-mouse}/\texttt{white-mouse}
-    子类统一重映射为鼠标类；
+  \item \textbf{杯子（class 0）}：Roboflow 公开杯子数据集
+    \texttt{cup-detection} v3（CC BY 4.0），抽取后取 1500 张；
+    来源 \url{https://universe.roboflow.com/my-workspace-7j2fi/cup-detection-w8kfb/dataset/3}；
+  \item \textbf{鼠标（class 1）}：Roboflow Computer-Mouse 数据集 v2
+    （CC BY 4.0，653 项目、1110 张），来源
+    \url{https://universe.roboflow.com/machine-learning-chipg/computer-mouse-tqzgh/dataset/2}，
+    将其中 \texttt{black-mouse}/\texttt{white-mouse} 子类统一重映射为鼠标类；
   \item \textbf{个人测试集}：自采集并标注 20 张（杯子 10 张 + 鼠标 10 张），
     \emph{不参与训练}，仅用于最终验收测试。
 \end{itemize}
@@ -370,7 +375,9 @@ ros2 topic echo /detections
   \bibitem{tensorrt} NVIDIA. TensorRT: High Performance Deep Learning Inference
     [CP/OL]. https://developer.nvidia.com/tensorrt.
   \bibitem{roboflow} Roboflow. Computer-Mouse Dataset (v2, CC BY 4.0)
-    [DB/OL]. https://universe.roboflow.com.
+    [DB/OL]. https://universe.roboflow.com/machine-learning-chipg/computer-mouse-tqzgh/dataset/2.
+  \bibitem{roboflow_cup} Roboflow. Cup Detection (v3, CC BY 4.0) [DB/OL].
+    https://universe.roboflow.com/my-workspace-7j2fi/cup-detection-w8kfb/dataset/3.
   \bibitem{coco} Lin T Y, Maire M, Belongie S, et al. Microsoft COCO: Common
     Objects in Context [C]//ECCV. 2014: 740--755.
 \end{thebibliography}
