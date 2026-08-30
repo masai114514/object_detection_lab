@@ -1,0 +1,6 @@
+# 平衡后的 cup(0)+mouse(1) 数据集
+path: public_data/balanced
+train: images/train
+val: images/val
+nc: 2
+names: ['cup', 'mouse']
